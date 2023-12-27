@@ -1,4 +1,3 @@
-
 import json
 import requests
 import streamlit as st
@@ -88,16 +87,19 @@ def second_button(summary: str):
 
 if __name__ == '__main__':
     st.set_page_config(layout="wide")
+    st.subheader("Generate Article")
     col1, col2 = st.columns(2)
     input = st.empty()
     url = input.text_input(label="Regenerate Article", placeholder="Enter Url", label_visibility="hidden")
     button1 = st.button("Generate summary")
-    button2 = st.button("Regenerate summary")
     if url:
         summary, cb1 = first_button(url)
+        input.empty()
+        if 'summary' != st.session_state:
+            st.session_state.summary = summary
         if button1:
             st.write(summary)
-        if button2:
+        if st.button("Regenerate summary"):
             regenerated_summary, cb2 = second_button(summary)
             image_prompt = regenerated_summary.split("Image Prompt:")[1]
             with col1:
@@ -109,5 +111,12 @@ if __name__ == '__main__':
                 image_path = create_image(image_prompt)
                 image_URL = upload_image(image_path)
                 st.image(image_URL, width=400, )
-                st.write(cb2)
-
+            with st.expander(":blue[**Cost Statistics**]"):
+                statsCol1, statsCol2, statsCol3, statsCol4, statsCol5 = st.columns(5, gap='small')
+                statsCol1.metric(label=":grey[*No of Request*]",
+                                 value=f"{cb2.successful_requests + cb1.successful_requests}")
+                statsCol2.metric(label=":grey[*Prompt Tokens*]", value=f"{cb2.prompt_tokens + cb1.prompt_tokens}")
+                statsCol3.metric(label=":grey[*Completion Tokens*]",
+                                 value=f"{cb2.completion_tokens + cb1.completion_tokens}")
+                statsCol4.metric(label=":grey[*Total Tokens*]", value=f"{cb2.total_tokens + cb1.total_tokens}")
+                statsCol5.metric(label=":grey[*Total Cost (USD)*]", value=f"${cb2.total_cost + cb2.total_cost:.4f}")
